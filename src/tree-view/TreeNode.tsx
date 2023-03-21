@@ -1,8 +1,14 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import React, { Children, FC, memo } from 'react';
+import React, { Children, CSSProperties, FC, memo } from 'react';
 import { useStyles } from '../styles';
+import { TreeNodeProps } from '../types';
 
-const Arrow: FC<any> = ({ expanded, styles }) => (
+interface ArrowProps {
+  styles: Record<string, CSSProperties>;
+  expanded: boolean;
+}
+
+const Arrow: FC<ArrowProps> = ({ expanded, styles }) => (
   <span
     style={{
       ...styles.base,
@@ -12,16 +18,18 @@ const Arrow: FC<any> = ({ expanded, styles }) => (
   </span>
 );
 
-export const TreeNode: FC<any> = memo((props) => {
-  props = {
-    expanded: true,
-    nodeRenderer: ({ name }: any) => <span>{name}</span>,
-    onClick: () => {},
-    shouldShowArrow: false,
-    shouldShowPlaceholder: true,
-    ...props,
-  };
-  const { expanded, onClick, children, nodeRenderer, title, shouldShowArrow, shouldShowPlaceholder } = props;
+const DefaultNodeRenderer: FC<TreeNodeProps> = memo(({ name }) => <span>{name}</span>);
+
+export const TreeNode: FC<TreeNodeProps> = memo((props) => {
+  const {
+    children,
+    title,
+    expanded = true,
+    onClick = () => {},
+    nodeRenderer = DefaultNodeRenderer,
+    shouldShowArrow = false,
+    shouldShowPlaceholder = true,
+  } = props;
 
   const styles = useStyles('TreeNode');
   const NodeRenderer = nodeRenderer;
@@ -43,13 +51,3 @@ export const TreeNode: FC<any> = memo((props) => {
     </li>
   );
 });
-
-// TreeNode.propTypes = {
-//   name: PropTypes.string,
-//   data: PropTypes.any,
-//   expanded: PropTypes.bool,
-//   shouldShowArrow: PropTypes.bool,
-//   shouldShowPlaceholder: PropTypes.bool,
-//   nodeRenderer: PropTypes.func,
-//   onClick: PropTypes.func,
-// };

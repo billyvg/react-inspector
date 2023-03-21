@@ -1,11 +1,12 @@
-import React, { useContext, useCallback, useLayoutEffect, useState, memo } from 'react';
+import React, { useContext, useCallback, useLayoutEffect, useState, memo, FC } from 'react';
 import { ExpandedPathsContext } from './ExpandedPathsContext';
 import { TreeNode } from './TreeNode';
 import { DEFAULT_ROOT_PATH, hasChildNodes, getExpandedPaths } from './pathUtils';
 
 import { useStyles } from '../styles';
+import { ConnectedTreeNodeProps, Data, DataIterator, OnExpandCallback, TreeViewProps } from '../types';
 
-const ConnectedTreeNode = memo<any>((props) => {
+const ConnectedTreeNode = memo<ConnectedTreeNodeProps>((props) => {
   const { data, dataIterator, path, depth, nodeRenderer, onExpand } = props;
   const [expandedPaths, setExpandedPaths] = useContext(ExpandedPathsContext);
   const nodeHasChildNodes = hasChildNodes(data, dataIterator);
@@ -44,7 +45,7 @@ const ConnectedTreeNode = memo<any>((props) => {
       {
         // only render if the node is expanded
         expanded
-          ? [...dataIterator(data)].map(({ name, data, ...renderNodeProps }) => {
+          ? [...dataIterator(data)].map(({ name, data, ...rendererProps }) => {
               return (
                 <ConnectedTreeNode
                   name={name}
@@ -54,7 +55,7 @@ const ConnectedTreeNode = memo<any>((props) => {
                   key={name}
                   dataIterator={dataIterator}
                   nodeRenderer={nodeRenderer}
-                  {...renderNodeProps}
+                  {...rendererProps}
                 />
               );
             })
@@ -64,51 +65,34 @@ const ConnectedTreeNode = memo<any>((props) => {
   );
 });
 
-// ConnectedTreeNode.propTypes = {
-//   name: PropTypes.string,
-//   data: PropTypes.any,
-//   dataIterator: PropTypes.func,
-//   depth: PropTypes.number,
-//   expanded: PropTypes.bool,
-//   nodeRenderer: PropTypes.func,
-//   onExpand: PropTypes.func,
-// };
+export const TreeView = memo<TreeViewProps>(
+  ({ name, data, dataIterator, nodeRenderer, expandPaths, expandLevel, onExpand }) => {
+    const styles = useStyles('TreeView');
+    const stateAndSetter = useState({});
+    const [, setExpandedPaths] = stateAndSetter;
 
-export const TreeView = memo<any>(({ name, data, dataIterator, nodeRenderer, expandPaths, expandLevel, onExpand }) => {
-  const styles = useStyles('TreeView');
-  const stateAndSetter = useState({});
-  const [, setExpandedPaths] = stateAndSetter;
+    useLayoutEffect(
+      () =>
+        setExpandedPaths((prevExpandedPaths) =>
+          getExpandedPaths(data, dataIterator, expandPaths, expandLevel, prevExpandedPaths)
+        ),
+      [data, dataIterator, expandPaths, expandLevel]
+    );
 
-  useLayoutEffect(
-    () =>
-      setExpandedPaths((prevExpandedPaths) =>
-        getExpandedPaths(data, dataIterator, expandPaths, expandLevel, prevExpandedPaths)
-      ),
-    [data, dataIterator, expandPaths, expandLevel]
-  );
-
-  return (
-    <ExpandedPathsContext.Provider value={stateAndSetter}>
-      <ol role="tree" style={styles.treeViewOutline}>
-        <ConnectedTreeNode
-          name={name}
-          data={data}
-          dataIterator={dataIterator}
-          depth={0}
-          path={DEFAULT_ROOT_PATH}
-          nodeRenderer={nodeRenderer}
-          onExpand={onExpand}
-        />
-      </ol>
-    </ExpandedPathsContext.Provider>
-  );
-});
-
-// TreeView.propTypes = {
-//   name: PropTypes.string,
-//   data: PropTypes.any,
-//   dataIterator: PropTypes.func,
-//   nodeRenderer: PropTypes.func,
-//   expandPaths: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
-//   expandLevel: PropTypes.number,
-// };
+    return (
+      <ExpandedPathsContext.Provider value={stateAndSetter}>
+        <ol role="tree" style={styles.treeViewOutline}>
+          <ConnectedTreeNode
+            name={name}
+            data={data}
+            dataIterator={dataIterator}
+            depth={0}
+            path={DEFAULT_ROOT_PATH}
+            nodeRenderer={nodeRenderer}
+            onExpand={onExpand}
+          />
+        </ol>
+      </ExpandedPathsContext.Provider>
+    );
+  }
+);

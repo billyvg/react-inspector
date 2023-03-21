@@ -8,9 +8,13 @@ import { propertyIsEnumerable } from '../utils/objectPrototype';
 import { getPropertyValue } from '../utils/propertyUtils';
 
 import { themeAcceptor } from '../styles';
+import { Data, NodeRendererProps, OnExpandCallback, TreeNodeProps } from '../types';
 
-const createIterator = (showNonenumerable: any, sortObjectKeys: any) => {
-  const objectIterator = function* (data: any) {
+const createIterator = (
+  showNonenumerable: boolean,
+  sortObjectKeys: undefined | boolean | ((a: string, b: string) => number)
+) => {
+  const objectIterator = function* (data: Data) {
     const shouldIterate = (typeof data === 'object' && data !== null) || typeof data === 'function';
     if (!shouldIterate) return;
 
@@ -86,44 +90,51 @@ const createIterator = (showNonenumerable: any, sortObjectKeys: any) => {
   return objectIterator;
 };
 
-const defaultNodeRenderer = ({ depth, name, data, isNonenumerable }: any) =>
+const defaultNodeRenderer = ({ depth, name, data, isNonenumerable }: NodeRendererProps) =>
   depth === 0 ? (
     <ObjectRootLabel name={name} data={data} />
   ) : (
     <ObjectLabel name={name} data={data} isNonenumerable={isNonenumerable} />
   );
 
+export interface ObjectInspectorProps {
+  name: string;
+
+  /** Not required prop because we also allow undefined value */
+  data: Data | undefined;
+
+  /** An integer specifying to which level the tree should be initially expanded. */
+  expandLevel?: number;
+
+  /** An array containing all the paths that should be expanded when the component is initialized, or a string of just one path */
+  expandPaths?: string | string[];
+
+  /** Show non-enumerable properties */
+  showNonenumerable?: boolean;
+
+  /** Sort object keys with optional compare function. */
+  sortObjectKeys?: boolean | ((a: string, b: string) => number);
+
+  /** Provide a custom nodeRenderer */
+  nodeRenderer?: FC<TreeNodeProps>;
+
+  /** Callback when node is expanded or collapsed */
+  onExpand?: OnExpandCallback;
+}
 /**
  * Tree-view for objects
  */
-const ObjectInspector: FC<any> = ({ showNonenumerable = false, sortObjectKeys, nodeRenderer, ...treeViewProps }) => {
+const ObjectInspector: FC<ObjectInspectorProps> = ({
+  showNonenumerable = false,
+  sortObjectKeys,
+  nodeRenderer,
+  ...treeViewProps
+}) => {
   const dataIterator = createIterator(showNonenumerable, sortObjectKeys);
   const renderer = nodeRenderer ? nodeRenderer : defaultNodeRenderer;
 
   return <TreeView nodeRenderer={renderer} dataIterator={dataIterator} {...treeViewProps} />;
 };
-
-// ObjectInspector.propTypes = {
-//   /** An integer specifying to which level the tree should be initially expanded. */
-//   expandLevel: PropTypes.number,
-//   /** An array containing all the paths that should be expanded when the component is initialized, or a string of just one path */
-//   expandPaths: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
-
-//   name: PropTypes.string,
-//   /** Not required prop because we also allow undefined value */
-//   data: PropTypes.any,
-
-//   /** Show non-enumerable properties */
-//   showNonenumerable: PropTypes.bool,
-//   /** Sort object keys with optional compare function. */
-//   sortObjectKeys: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-
-//   /** Provide a custom nodeRenderer */
-//   nodeRenderer: PropTypes.func,
-//
-//   /** Callback when node is clicked */
-//   onExpand: PropTypes.func,
-// };
 
 const themedObjectInspector = themeAcceptor(ObjectInspector);
 

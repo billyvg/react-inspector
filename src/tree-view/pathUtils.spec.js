@@ -9,6 +9,8 @@ describe('PathUtils', () => {
   beforeEach(() => {});
 
   it('wildcardPathsFromLevel works', () => {
+    expect(wildcardPathsFromLevel(undefined)).toEqual([]);
+
     expect(wildcardPathsFromLevel(-1)).toEqual([]);
 
     expect(wildcardPathsFromLevel(0)).toEqual([]);

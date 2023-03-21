@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { createContext } from 'react';
+import { createContext, Dispatch, SetStateAction } from 'react';
 
-export const ExpandedPathsContext = createContext<[any, (...args: any[]) => any]>([{}, () => {}]);
+export type ExpandedPaths = Record<string, boolean>;
+
+export type ExpandedPathsContextType = [ExpandedPaths, Dispatch<SetStateAction<ExpandedPaths>>];
+export const ExpandedPathsContext = createContext<ExpandedPathsContextType>([{}, () => {}]);
